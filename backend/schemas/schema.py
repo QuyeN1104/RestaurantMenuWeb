@@ -5,9 +5,9 @@ class Item(BaseModel):
     name:str
     cost:float
 
-class Category(BaseModel):
+class CategoryCreate(BaseModel):
     name:str
-    items: List[Item]
-    
+
+
 
 
