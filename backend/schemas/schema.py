@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 class ItemCreate(BaseModel):
     name:str
@@ -10,6 +10,10 @@ class ItemRead(ItemCreate):
     class Config:
         from_attributes = True
 
+# update
+class ItemUpdate(BaseModel):
+    name:Optional[str] = None
+    cost:Optional[float] = None
 
 class CategoryCreate(BaseModel):
     name:str
@@ -20,6 +24,9 @@ class CategoryRead(CategoryCreate):
     class Config:
         from_attributes = True
 
+#New 
+class CategoryUpdate(BaseModel):
+    name:Optional[str] = None
 
 
 

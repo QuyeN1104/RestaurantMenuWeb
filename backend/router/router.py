@@ -49,7 +49,26 @@ def delete_category(
         db.rollback()
         raise HTTPException(status_code=500, detail='Error while deleting that category')
 
+# New: update category
+@router.put('/categories/{category_id}', response_model=CategoryRead, status_code=200)
+def update_category(
+    payload: CategoryUpdate,
+    category_id:int = Path(...),
+    db: Session = Depends(get_db)
+):
+    cat = db.query(Category).filter(Category.id == category_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail='Category not found')
+    
+    if payload.name is not None and payload.name != cat.name:
+        existing = db.query(Category).filter(Category.name == payload.name).first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Category name existed')
+        cat.name = payload.name
 
+    db.commit(); db.refresh(cat)
+    cat = db.query(Category).options(selectinload(Category.foods)).filter(Category.id == category_id).first()
+    return cat
 
 # -----Food--------
 @router.post('/categories/{category_id}/foods', response_model=ItemRead, status_code=201)
@@ -68,3 +87,40 @@ def add_food(
     db.refresh(food)
     return food
 
+# New: Update
+@router.put('/foods/{food_id}', response_model=ItemRead, status_code=200)
+def update_food(
+        payload: ItemUpdate,
+        food_id:int = Path(...),
+        db: Session = Depends(get_db)
+):
+    food = db.query(Food).filter(Food.id == food_id).first()
+    if not food:
+        raise HTTPException(status_code=404, detail='Food not found')
+    
+    if payload.name is not None and payload.name != food.name:
+        existing = db.query(Food).filter(Food.name == payload.name).first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Food name is already exists')
+        
+        food.name = payload.name
+
+    if payload.cost is not None:
+        food.cost = payload.cost
+    db.commit(); db.refresh(food)
+    return food
+
+#New: D-Delete Food
+@router.delete('/foods/{food_id}')
+def delete_food(
+    food_id: int = Path(...),
+    db: Session = Depends(get_db)
+):
+    food = db.query(Food).filter(Food.id == food_id).first()
+    if not food:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Food not found')
+    
+    db.delete(food); db.commit();
+    return Response(status_code=204)
+        
+        
